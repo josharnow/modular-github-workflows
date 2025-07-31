@@ -1,0 +1,77 @@
+name: Deploy to AWS Elastic Beanstalk
+
+on:
+  workflow_call:
+    # inputs:
+    #   config-path:
+    #     required: true
+    #     type: string
+    secrets:
+      GITHUB_CONTAINER_REGISTRY_TOKEN:
+        required: true
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_REGION:
+        required: true
+      AWS_S3_BUCKET:
+        required: true
+      EB_APPLICATION_NAME:
+        required: true
+      EB_ENVIRONMENT_NAME:
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v4.2.1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Set deployment variables
+        id: vars
+        run: |
+          echo "DEPLOY_PACKAGE=${{ github.event.repository.name }}-${{ github.sha }}.zip" >> $GITHUB_ENV
+
+      - name: Zip project for deployment
+        run: |
+          zip -r $DEPLOY_PACKAGE . -x "node_modules/*" ".next/*" "Dockerfile*" "docker-compose*" "*.zip" ".git/*"
+
+      - name: Upload deployment package to S3
+        run: |
+          aws s3 cp $DEPLOY_PACKAGE s3://${{ secrets.AWS_S3_BUCKET }}/$DEPLOY_PACKAGE
+
+      - name: Create new Elastic Beanstalk Application Version
+        run: |
+          aws elasticbeanstalk create-application-version \
+            --application-name ${{ secrets.EB_APPLICATION_NAME }} \
+            --source-bundle S3Bucket="${{ secrets.AWS_S3_BUCKET }}",S3Key="$DEPLOY_PACKAGE" \
+            --version-label "ver-${{ github.sha }}" \
+            --description "commit-sha-${{ github.sha }}"
+
+      - name: Deploy new Application Version
+        run: |
+          aws elasticbeanstalk update-environment \
+            --environment-name ${{ secrets.EB_ENVIRONMENT_NAME }} \
+            --version-label "ver-${{ github.sha }}"
+
+      - name: Wait for deployment to complete
+        run: |
+          aws elasticbeanstalk wait environment-updated \
+            --environment-name ${{ secrets.EB_ENVIRONMENT_NAME }}
+
+      - name: Get deployment status
+        run: |
+          aws elasticbeanstalk describe-environments \
+            --environment-names ${{ secrets.EB_ENVIRONMENT_NAME }} \
+            --query 'Environments[0].{Status:Status,Health:Health,URL:CNAME}' \
+            --output table
