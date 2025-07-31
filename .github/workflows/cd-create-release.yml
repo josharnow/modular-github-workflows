@@ -48,4 +48,4 @@ jobs:
           generate_release_notes: true
           prerelease: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_CONTAINER_REGISTRY_TOKEN }}
