@@ -30,7 +30,7 @@ jobs:
       - name: Process project into package for deployment
         run: |
           echo "Processing project for deployment..."
-          eval $ZIP_COMMAND
+          eval $CREATE_DEPLOYMENT_PACKAGE_COMMAND
           echo "Deployment package created at: $DEPLOY_PACKAGE_PATH"
 
       - name: Upload deployment package
