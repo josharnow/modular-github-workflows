@@ -63,7 +63,7 @@ env:
 
 jobs:
   build-android:
-    if: (inputs.platform == 'all' || inputs.platform =='android') && ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call')
+    if: (inputs.platform == 'all' || inputs.platform == 'android') && ((github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')) || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call')
     env:
       BUILD_TYPE: ${{ inputs.buildType || 'all' }}
       PLATFORM: ${{ inputs.platform || 'all' }}
@@ -184,7 +184,7 @@ jobs:
 
 
       - name: 📱 Build iOS Development
-        if: (env.BUILD_TYPE == 'all' || env.BUILD_TYPE == 'ios-dev') && (env.PLATFORM == 'all' || env.PLATFORM == 'ios')
+        # if: (env.BUILD_TYPE == 'all' || env.BUILD_TYPE == 'ios-dev') && (env.PLATFORM == 'all' || env.PLATFORM == 'ios')
         run: |
           export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
           eas build --platform ios --profile development --local --non-interactive --output=./app-ios-dev.app
@@ -192,7 +192,7 @@ jobs:
           NODE_ENV: development
 
       - name: 📱 Build iOS Production
-        if: (env.BUILD_TYPE == 'all' || env.BUILD_TYPE == 'ios-prod') && (env.PLATFORM == 'all' || env.PLATFORM == 'ios')
+        # if: (env.BUILD_TYPE == 'all' || env.BUILD_TYPE == 'ios-prod') && (env.PLATFORM == 'all' || env.PLATFORM == 'ios')
         run: |
           export NODE_OPTIONS="--openssl-legacy-provider --max_old_space_size=4096"
           eas build --platform ios --profile production --local --non-interactive --output=./app-ios-prod.ipa
