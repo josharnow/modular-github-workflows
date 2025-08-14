@@ -39,8 +39,6 @@ on:
         required: false
       DISCORD_WEBHOOK:
         required: false
-      GITHUB_TOKEN:
-        required: true
 
 env:
   EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
